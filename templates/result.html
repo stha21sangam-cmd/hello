@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnosis Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>🌾 Diagnosis Result</h1>
+
+    <img src="{{ url_for('static', filename='uploads/' + image) }}" width="300">
+
+    <h2>Disease: {{ disease }}</h2>
+    <h3>Confidence: {{ probability }}%</h3>
+    <h3>Severity: {{ severity }}</h3>
+
+    <p><strong>Treatment Advice:</strong></p>
+    <p>{{ advice }}</p>
+
+    <br>
+    <a href="/">Analyze Another Crop</a>
+</div>
+
+</body>
+</html>

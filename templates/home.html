@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>🌿 Smart AI</h1>
+    <p>Upload your crop photo. Get instant AI diagnosis.</p>
+
+    <form action="/analyze" method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <br><br>
+        <button type="submit">Analyze Crop</button>
+    </form>
+</div>
+
+</body>
+</html>
