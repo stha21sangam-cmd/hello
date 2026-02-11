@@ -1,21 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Smart AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>AgricultureVision AI</title>
 </head>
 <body>
 
-<div class="container">
-    <h1>🌿 Smart AI</h1>
-    <p>Upload your crop photo. Get instant AI diagnosis.</p>
+    <h1>🌿 AgricultureVision AI</h1>
 
-    <form action="/analyze" method="POST" enctype="multipart/form-data">
-        <input type="file" name="image" required>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="plant_image" required>
         <br><br>
-        <button type="submit">Analyze Crop</button>
+        <button type="submit">Scan Plant</button>
     </form>
-</div>
 
 </body>
 </html>

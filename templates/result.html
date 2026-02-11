@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Diagnosis Result</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Result - AgricultureVision AI</title>
 </head>
 <body>
 
-<div class="container">
-    <h1>🌾 Diagnosis Result</h1>
+    <h1>🌿 Scan Result</h1>
 
-    <img src="{{ url_for('static', filename='uploads/' + image) }}" width="300">
+    <img src="{{ image }}" width="300"><br><br>
 
-    <h2>Disease: {{ disease }}</h2>
-    <h3>Confidence: {{ probability }}%</h3>
-    <h3>Severity: {{ severity }}</h3>
+    <h3>Plant Name:</h3>
+    <p>{{ plant_name }}</p>
 
-    <p><strong>Treatment Advice:</strong></p>
-    <p>{{ advice }}</p>
+    <h3>Common Names:</h3>
+    <p>
+        {% if common_names %}
+            {{ common_names | join(', ') }}
+        {% else %}
+            No common names available
+        {% endif %}
+    </p>
+
+    <h3>Confidence:</h3>
+    <p>{{ confidence }} %</p>
+
+    <h3>Health Status:</h3>
+    <p>{{ health_status }}</p>
+
+    <h3>Recommended Care:</h3>
+    <p>{{ needs }}</p>
 
     <br>
-    <a href="/">Analyze Another Crop</a>
-</div>
+    <a href="/">Scan Another Plant</a>
 
 </body>
 </html>

@@ -1,66 +1,105 @@
-from flask import Flask, render_template, request, redirect
-import requests
 import os
+import requests
+from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# =============================
+# CONFIG
+# =============================
+API_KEY = "2b10Z95xm4xGPxuHmI38kZrJ"
+PLANT_NET_URL = f"https://my-api.plantnet.org/v2/identify/all?api-key={API_KEY}"
+
 UPLOAD_FOLDER = "static/uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-API_KEY = "83kCAri6RbaIRdqGBe1RLYClnZZ1h44TFEa9RnhpLC232bFeR9"   # Replace this
+ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# =============================
+# Helper
+# =============================
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route("/")
+
+# =============================
+# Routes
+# =============================
+@app.route("/", methods=["GET", "POST"])
 def home():
+    if request.method == "POST":
+
+        if "plant_image" not in request.files:
+            return "No file uploaded"
+
+        file = request.files["plant_image"]
+
+        if file.filename == "":
+            return "No file selected"
+
+        if file and allowed_file(file.filename):
+
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            file.save(filepath)
+
+            # Send to PlantNet API (multipart/form-data)
+            with open(filepath, "rb") as img:
+                files = {
+                    "images": (filename, img, "image/jpeg")
+                }
+                data = {
+                    "organs": "leaf"
+                }
+
+                response = requests.post(
+                    PLANT_NET_URL,
+                    files=files,
+                    data=data
+                )
+
+            if response.status_code != 200:
+                return f"API Error: {response.text}"
+
+            result = response.json()
+
+            if "results" not in result or len(result["results"]) == 0:
+                return "No plant detected."
+
+            best_match = result["results"][0]
+
+            plant_name = best_match["species"]["scientificNameWithoutAuthor"]
+            common_names = best_match["species"].get("commonNames", [])
+            confidence = round(best_match["score"] * 100, 2)
+
+            # ====== Simulated Health AI Layer ======
+            if confidence > 80:
+                health_status = "Plant appears Healthy 🌿"
+                needs = "Regular watering and full sunlight."
+            elif confidence > 50:
+                health_status = "Plant condition moderate ⚠️"
+                needs = "Check soil moisture and sunlight exposure."
+            else:
+                health_status = "Plant may be stressed 🚨"
+                needs = "Inspect for pests, diseases, or nutrient deficiency."
+
+            return render_template(
+                "result.html",
+                image=filepath,
+                plant_name=plant_name,
+                common_names=common_names,
+                confidence=confidence,
+                health_status=health_status,
+                needs=needs
+            )
+
+        else:
+            return "Invalid file type. Only JPG, JPEG, PNG allowed."
+
     return render_template("home.html")
 
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    if "image" not in request.files:
-        return redirect("/")
-
-    file = request.files["image"]
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(filepath)
-
-    with open(filepath, "rb") as img:
-        response = requests.post(
-            "https://api.plant.id/v2/health_assessment",
-            headers={"Api-Key": API_KEY},
-            files={"images": img},
-            data={"organs": "leaf"}
-        )
-
-    result = response.json()
-
-    try:
-        disease = result["health_assessment"]["diseases"][0]["name"]
-        probability = round(result["health_assessment"]["diseases"][0]["probability"] * 100, 2)
-        severity = "High" if probability > 70 else "Medium" if probability > 40 else "Low"
-    except:
-        disease = "Healthy or Unknown"
-        probability = 0
-        severity = "None"
-
-    advice = generate_advice(disease)
-
-    return render_template("result.html",
-                           image=filename,
-                           disease=disease,
-                           probability=probability,
-                           severity=severity,
-                           advice=advice)
-
-def generate_advice(disease):
-    if "blight" in disease.lower():
-        return "Remove infected leaves. Use pesticide spray. Avoid overhead watering."
-    elif "rust" in disease.lower():
-        return "Improve air circulation. Apply sulfur-based fungicide."
-    else:
-        return "Maintain proper watering and monitor regularly."
 
 if __name__ == "__main__":
     app.run(debug=True)
